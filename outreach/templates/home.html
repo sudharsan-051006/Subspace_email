@@ -1,0 +1,92 @@
+<h1>AI Outreach Agent</h1>
+
+<form method="POST">
+    {% csrf_token %}
+
+    <input
+        type="text"
+        name="domain"
+        placeholder="stripe.com"
+        required
+    >
+
+    <button type="submit">
+        Search
+    </button>
+</form>
+
+<hr>
+
+{% for item in results %}
+
+    <h2>{{ item.company.name }}</h2>
+
+    <p>
+        <strong>Domain:</strong>
+        {{ item.company.domain }}
+    </p>
+
+    <p>
+        <strong>Industry:</strong>
+        {{ item.company.industry }}
+    </p>
+
+    <p>
+        <strong>Employees:</strong>
+        {{ item.company.employees }}
+    </p>
+
+    <h3>Decision Makers</h3>
+
+    <ul>
+
+        {% for person in item.people %}
+
+            <li>
+
+                <strong>{{ person.name }}</strong>
+
+                <br>
+
+                {{ person.title }}
+
+                <br>
+
+                <a
+                    href="{{ person.linkedin_url }}"
+                    target="_blank"
+                >
+                    LinkedIn Profile
+                </a>
+
+                <br>
+
+                {% if person.email %}
+                    <p>
+                        <strong>Email:</strong>
+                        {{ person.email }}
+                    </p>
+                {% endif %}
+
+                <br>
+
+                <small>
+                    Person ID:
+                    {{ person.person_id }}
+                </small>
+
+            </li>
+
+            <br>
+
+        {% empty %}
+
+            <li>No decision makers found</li>
+
+        {% endfor %}
+
+    </ul>
+
+    <hr>
+
+{% endfor %}

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Company Enrichment</title>
+</head>
+<body>
+
+<h2>Company Enrichment</h2>
+
+<form method="POST">
+    {% csrf_token %}
+
+    <input
+        type="text"
+        name="domain"
+        placeholder="intercom.com"
+        required
+    >
+
+    <button type="submit">
+        Search
+    </button>
+</form>
+
+<hr>
+
+{% if result and result.success %}
+
+    <h3>Company Details</h3>
+
+    <p>
+        <b>Name:</b>
+        {{ result.data.company.name }}
+    </p>
+
+    <p>
+        <b>Industry:</b>
+        {{ result.data.company.industry }}
+    </p>
+
+    <p>
+        <b>Employees:</b>
+        {{ result.data.company.employee_count }}
+    </p>
+
+    <p>
+        <b>Website:</b>
+        {{ result.data.company.website }}
+    </p>
+
+    <p>
+        <b>Country:</b>
+        {{ result.data.company.location.country }}
+    </p>
+
+{% endif %}
+
+</body>
+</html>
