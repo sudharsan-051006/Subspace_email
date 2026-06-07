@@ -1,7 +1,8 @@
-from outreach.services.prospeo_service import ProspeoService
+from outreach.services.brevo_service import BrevoService
 
-result = ProspeoService.search_people(
-    "intercom.com"
+result = BrevoService.send_email(
+    recipient_email="sudharsanreddy.saragada@gmail.com",
+    recipient_name="Sudharsan"
 )
 
 print(result)

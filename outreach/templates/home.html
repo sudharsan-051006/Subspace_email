@@ -1,92 +1,628 @@
-<h1>AI Outreach Agent</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Outreach Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<form method="POST">
-    {% csrf_token %}
+  :root {
+    --bg: #0a0c0f;
+    --surface: #111418;
+    --surface-2: #181c22;
+    --surface-3: #1f242d;
+    --border: rgba(255,255,255,0.06);
+    --border-md: rgba(255,255,255,0.10);
+    --border-hover: rgba(255,255,255,0.16);
+    --text: #dde1ea;
+    --text-muted: #6b7585;
+    --text-faint: #353d4a;
+    --accent: #4ade80;
+    --accent-dim: rgba(74,222,128,0.10);
+    --accent-glow: rgba(74,222,128,0.18);
+    --accent-text: #0d1f14;
+    --blue: #60a5fa;
+    --blue-dim: rgba(96,165,250,0.10);
+    --amber: #fbbf24;
+    --danger: #f87171;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+    --r: 8px;
+    --r-lg: 12px;
+    --r-xl: 16px;
+  }
 
-    <input
-        type="text"
-        name="domain"
-        placeholder="stripe.com"
-        required
-    >
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 6rem;
+    line-height: 1.6;
+  }
 
-    <button type="submit">
-        Search
-    </button>
-</form>
+  /* ─── TOPBAR ─── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,12,15,0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
 
-<hr>
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 
-{% for item in results %}
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(74,222,128,0.25);
+    border-radius: var(--r);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo-mark svg { width: 16px; height: 16px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-    <h2>{{ item.company.name }}</h2>
+  .topbar-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .topbar-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
 
-    <p>
-        <strong>Domain:</strong>
-        {{ item.company.domain }}
-    </p>
+  .status-dot {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; color: var(--text-muted);
+  }
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent-glow);
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
 
-    <p>
-        <strong>Industry:</strong>
-        {{ item.company.industry }}
-    </p>
+  /* ─── LAYOUT ─── */
+  .page {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem;
+  }
 
-    <p>
-        <strong>Employees:</strong>
-        {{ item.company.employees }}
-    </p>
+  /* ─── SECTION ─── */
+  .section { margin-bottom: 2rem; }
 
-    <h3>Decision Makers</h3>
+  .section-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
 
-    <ul>
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    overflow: hidden;
+  }
+
+  .card-body { padding: 1.5rem; }
+
+  /* ─── FORM ─── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .span-2 { grid-column: 1 / -1; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+
+  label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  input[type=text],
+  input[type=email],
+  input[type=number],
+  textarea,
+  select {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border-md);
+    border-radius: var(--r);
+    padding: 9px 12px;
+    font-size: 13.5px;
+    color: var(--text);
+    font-family: var(--font);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    -moz-appearance: textfield;
+    appearance: none;
+  }
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  input::placeholder, textarea::placeholder { color: var(--text-faint); }
+  input:focus, textarea:focus {
+    border-color: rgba(74,222,128,0.35);
+    background: var(--surface-3);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  textarea { resize: vertical; line-height: 1.65; min-height: 100px; }
+
+  .num-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px;
+    border-radius: var(--r);
+    font-size: 13px; font-weight: 500;
+    font-family: var(--font);
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    white-space: nowrap;
+    letter-spacing: -0.01em;
+  }
+  .btn:active { transform: scale(0.975); }
+  .btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+  .btn-accent {
+    background: var(--accent);
+    color: var(--accent-text);
+    box-shadow: 0 1px 12px var(--accent-glow);
+  }
+  .btn-accent:hover { background: #6ee7a0; box-shadow: 0 2px 18px var(--accent-glow); }
+
+  .btn-ghost {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border-md);
+  }
+  .btn-ghost:hover { border-color: var(--border-hover); background: var(--surface-3); }
+
+  .btn-blue {
+    background: var(--blue-dim);
+    color: var(--blue);
+    border: 1px solid rgba(96,165,250,0.2);
+  }
+  .btn-blue:hover { background: rgba(96,165,250,0.15); }
+
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-full { width: 100%; justify-content: center; }
+
+  /* ─── RESULTS ─── */
+  .company-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    margin-bottom: 1rem;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .company-card:hover { border-color: var(--border-md); }
+
+  .company-header {
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .company-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .company-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 7px;
+  }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10.5px;
+    color: var(--text-muted);
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-family: var(--mono);
+  }
+
+  /* ─── PERSON ─── */
+  .person-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .person-item:last-child { border-bottom: none; }
+  .person-item:hover { background: var(--surface-2); }
+
+  input[type=checkbox] {
+    width: 15px; height: 15px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--surface-3);
+    border: 1px solid var(--border-md);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 500; color: var(--text-muted);
+    flex-shrink: 0;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .person-body { flex: 1; min-width: 0; }
+  .person-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .person-title { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+
+  .person-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+
+  .email-tag {
+    font-size: 10.5px;
+    color: var(--blue);
+    background: var(--blue-dim);
+    border: 1px solid rgba(96,165,250,0.15);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-family: var(--mono);
+  }
+
+  .linkedin-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10.5px;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    transition: all 0.15s;
+    background: var(--surface-3);
+  }
+  .linkedin-btn:hover { color: var(--text); border-color: var(--border-hover); }
+  .linkedin-btn svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .no-email {
+    font-size: 10.5px;
+    color: var(--text-faint);
+    font-family: var(--mono);
+  }
+
+  /* ─── SEND BAR ─── */
+  .send-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    background: var(--surface-2);
+    border-top: 1px solid var(--border);
+    gap: 1rem;
+  }
+  .send-bar-label { font-size: 12px; color: var(--text-muted); }
+
+  /* ─── GLOBAL ACTIONS ─── */
+  .global-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1.25rem;
+    gap: 10px;
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 2.5rem 0;
+  }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-muted);
+  }
+  .empty-state svg {
+    width: 36px; height: 36px;
+    stroke: var(--text-faint);
+    fill: none; stroke-width: 1.5;
+    stroke-linecap: round; stroke-linejoin: round;
+    margin-bottom: 1rem;
+  }
+  .empty-title { font-size: 14px; font-weight: 500; color: var(--text-muted); margin-bottom: 4px; }
+  .empty-sub { font-size: 12px; color: var(--text-faint); }
+
+  /* ─── BADGE ─── */
+  .badge {
+    display: inline-flex; align-items: center;
+    font-size: 10px; font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 20px;
+    font-family: var(--mono);
+    letter-spacing: 0.04em;
+  }
+  .badge-green { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(74,222,128,0.2); }
+  .badge-blue { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(96,165,250,0.2); }
+
+  /* ─── INPUT ROW ─── */
+  .input-row { display: flex; gap: 8px; align-items: flex-end; }
+  .input-row > *:first-child { flex: 1; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .span-2 { grid-column: 1; }
+    .topbar { padding: 0 1rem; }
+    .page { padding: 1.5rem 1rem; }
+    .num-pair { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    </div>
+    <div>
+      <div class="topbar-title">AI Outreach Agent</div>
+    </div>
+  </div>
+  <div class="status-dot">
+    <span class="dot"></span>
+    Ready
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- ─── SEARCH FORM ─── -->
+  <div class="section">
+    <div class="section-label">Lead Search</div>
+    <div class="card">
+      <div class="card-body">
+        <form method="POST">
+          {% csrf_token %}
+
+          <div class="form-grid">
+
+            <div class="form-group span-2">
+              <label>Seed Domain</label>
+              <input type="text" name="domain" placeholder="stripe.com" required>
+            </div>
+
+            <div class="form-group">
+              <label>Companies</label>
+              <input type="number" name="company_limit" value="5">
+            </div>
+
+            <div class="form-group">
+              <label>People Per Company</label>
+              <input type="number" name="people_limit" value="10">
+            </div>
+
+            <div class="form-group">
+              <label>Sender Name</label>
+              <input type="text" name="sender_name" placeholder="Sudharsan Reddy">
+            </div>
+
+            <div class="form-group">
+              <label>Sender Email</label>
+              <input type="email" name="sender_email" placeholder="outreach@elinity.in">
+            </div>
+
+            <div class="form-group span-2">
+              <label>Your Idea / Offer</label>
+              <textarea
+                id="offer"
+                name="offer"
+                rows="5"
+                placeholder="Describe your startup, service, AI product, offer, partnership idea..."
+              ></textarea>
+            </div>
+
+          </div>
+
+          <div style="margin-top:1.25rem; display:flex; justify-content:flex-end;">
+            <button type="submit" class="btn btn-accent">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              Search Leads
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── RESULTS ─── -->
+  {% if results %}
+
+  <div class="section">
+    <div class="section-label">Results</div>
+
+    <form method="POST" action="/send-selected/">
+      {% csrf_token %}
+      <input type="hidden" id="bulk_idea" name="idea">
+
+      {% for item in results %}
+      <div class="company-card">
+
+        <div class="company-header">
+          <div>
+            <div class="company-name">{{ item.company.name }}</div>
+            <div class="company-pills">
+              <span class="pill">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                {{ item.company.domain }}
+              </span>
+              <span class="pill">{{ item.company.industry }}</span>
+              <span class="pill">{{ item.company.employees }} employees</span>
+            </div>
+          </div>
+          <span class="badge badge-green">Active</span>
+        </div>
 
         {% for person in item.people %}
+        <div class="person-item">
 
-            <li>
+          {% if person.email %}
+          <input type="checkbox" name="selected_emails" value="{{ person.email }}">
+          {% else %}
+          <input type="checkbox" disabled style="opacity:0.3;">
+          {% endif %}
 
-                <strong>{{ person.name }}</strong>
+          <div class="avatar">{{ person.name|slice:":2" }}</div>
 
-                <br>
+          <div class="person-body">
+            <div class="person-name">{{ person.name }}</div>
+            <div class="person-title">{{ person.title }}</div>
+          </div>
 
-                {{ person.title }}
+          <div class="person-actions">
+            {% if person.email %}
+            <span class="email-tag">{{ person.email }}</span>
+            {% else %}
+            <span class="no-email">no email</span>
+            {% endif %}
+            <a href="{{ person.linkedin_url }}" target="_blank" class="linkedin-btn">
+              <svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+              LinkedIn
+            </a>
+          </div>
 
-                <br>
-
-                <a
-                    href="{{ person.linkedin_url }}"
-                    target="_blank"
-                >
-                    LinkedIn Profile
-                </a>
-
-                <br>
-
-                {% if person.email %}
-                    <p>
-                        <strong>Email:</strong>
-                        {{ person.email }}
-                    </p>
-                {% endif %}
-
-                <br>
-
-                <small>
-                    Person ID:
-                    {{ person.person_id }}
-                </small>
-
-            </li>
-
-            <br>
-
-        {% empty %}
-
-            <li>No decision makers found</li>
-
+        </div>
         {% endfor %}
 
-    </ul>
+        <div class="send-bar">
+          <span class="send-bar-label">Select contacts to include in bulk send</span>
+        </div>
 
-    <hr>
+      </div>
+      {% endfor %}
 
-{% endfor %}
+      <div class="global-actions">
+        <button type="submit" class="btn btn-accent">
+          <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+          Generate Bulk Email Preview
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+
+  {% endif %}
+
+  <div class="divider"></div>
+
+  <!-- ─── CUSTOM EMAIL ─── -->
+  <div class="section">
+    <div class="section-label">Custom Recipient</div>
+
+    <div class="card">
+      <div class="card-body">
+        <form method="POST" action="/custom-email/">
+          {% csrf_token %}
+          <input type="hidden" id="hidden_idea" name="idea">
+
+          <div class="form-grid">
+
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" name="custom_email" placeholder="recipient@example.com" required>
+            </div>
+
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" name="custom_name" placeholder="Recipient Name" required>
+            </div>
+
+            <div class="form-group span-2">
+              <label>Company Name</label>
+              <input type="text" name="company_name" placeholder="NDTV">
+            </div>
+
+          </div>
+
+          <div style="margin-top:1.25rem; display:flex; justify-content:flex-end;">
+            <button type="submit" class="btn btn-ghost">
+              <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+              Generate Email Preview
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+document.querySelector('form[action="/custom-email/"]').addEventListener('submit', function() {
+  document.getElementById('hidden_idea').value = document.getElementById('offer').value;
+});
+
+const bulkForm = document.querySelector('form[action="/send-selected/"]');
+if (bulkForm) {
+  bulkForm.addEventListener('submit', function() {
+    document.getElementById('bulk_idea').value = document.getElementById('offer').value;
+  });
+}
+</script>
+
+</body>
+</html>

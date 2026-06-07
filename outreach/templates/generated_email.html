@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0c0f;
+    --surface: #111418;
+    --surface-2: #181c22;
+    --surface-3: #1f242d;
+    --border: rgba(255,255,255,0.06);
+    --border-md: rgba(255,255,255,0.10);
+    --border-hover: rgba(255,255,255,0.16);
+    --text: #dde1ea;
+    --text-muted: #6b7585;
+    --text-faint: #353d4a;
+    --accent: #4ade80;
+    --accent-dim: rgba(74,222,128,0.10);
+    --accent-glow: rgba(74,222,128,0.18);
+    --accent-text: #0d1f14;
+    --blue: #60a5fa;
+    --blue-dim: rgba(96,165,250,0.10);
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+    --r: 8px;
+    --r-lg: 12px;
+    --r-xl: 16px;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2.5rem 1.5rem 5rem;
+    line-height: 1.6;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(10,12,15,0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-mark {
+    width: 30px; height: 30px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(74,222,128,0.25);
+    border-radius: var(--r);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo-mark svg { width: 14px; height: 14px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .topbar-title { font-size: 14px; font-weight: 500; color: var(--text); }
+  .topbar-sep { color: var(--text-faint); font-size: 16px; }
+  .topbar-page { font-size: 13px; color: var(--text-muted); }
+
+  /* PAGE */
+  .page {
+    width: 100%;
+    max-width: 680px;
+    margin-top: 54px;
+    padding-top: 2.5rem;
+  }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    overflow: hidden;
+  }
+
+  /* RECIPIENT BAR */
+  .recipient-bar {
+    padding: 0.9rem 1.25rem;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .recipient-label {
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    min-width: 28px;
+  }
+
+  .recipient-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--surface-3);
+    border: 1px solid var(--border-md);
+    border-radius: 99px;
+    padding: 3px 10px 3px 5px;
+    font-size: 12px;
+  }
+
+  .avatar {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--blue-dim);
+    border: 1px solid rgba(96,165,250,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 500;
+    color: var(--blue);
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+  }
+
+  .chip-name { color: var(--text); font-weight: 500; }
+  .chip-dot { color: var(--text-faint); }
+  .chip-email { color: var(--text-muted); font-family: var(--mono); font-size: 11px; }
+
+  /* FORM BODY */
+  .form-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 1.1rem; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+  label {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  input[type=text],
+  textarea {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border-md);
+    border-radius: var(--r);
+    padding: 9px 12px;
+    font-size: 13.5px;
+    color: var(--text);
+    font-family: var(--font);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+  input::placeholder, textarea::placeholder { color: var(--text-faint); }
+  input:focus, textarea:focus {
+    border-color: rgba(74,222,128,0.35);
+    background: var(--surface-3);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  textarea {
+    resize: vertical;
+    min-height: 320px;
+    line-height: 1.7;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+
+  /* FOOTER */
+  .form-footer {
+    padding: 0.9rem 1.25rem;
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .footer-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: var(--text-faint);
+  }
+  .footer-hint svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 20px;
+    border-radius: var(--r);
+    font-size: 13px; font-weight: 500;
+    font-family: var(--font);
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    white-space: nowrap;
+    letter-spacing: -0.01em;
+  }
+  .btn:active { transform: scale(0.975); }
+  .btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+  .btn-accent {
+    background: var(--accent);
+    color: var(--accent-text);
+    box-shadow: 0 1px 12px var(--accent-glow);
+  }
+  .btn-accent:hover { background: #6ee7a0; box-shadow: 0 2px 18px var(--accent-glow); }
+
+  @media (max-width: 540px) {
+    .topbar { padding: 0 1rem; }
+    body { padding: 2rem 1rem 5rem; }
+    .chip-email { display: none; }
+    .chip-dot { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo-mark">
+    <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+  </div>
+  <span class="topbar-title">AI Outreach Agent</span>
+  <span class="topbar-sep">/</span>
+  <span class="topbar-page">Email Preview</span>
+</div>
+
+<div class="page">
+
+  <div class="section-label">Compose &amp; Send</div>
+
+  <div class="card">
+
+    <div class="recipient-bar">
+      <span class="recipient-label">To</span>
+      <div class="recipient-chip">
+        <div class="avatar">{{ name|slice:":2" }}</div>
+        <span class="chip-name">{{ name }}</span>
+        <span class="chip-dot">·</span>
+        <span class="chip-email">{{ email }}</span>
+      </div>
+    </div>
+
+    <form method="POST" action="/send-custom-email/">
+      {% csrf_token %}
+      <input type="hidden" name="email" value="{{ email }}">
+      <input type="hidden" name="name" value="{{ name }}">
+
+      <div class="form-body">
+
+        <div class="form-group">
+          <label>Subject</label>
+          <input type="text" name="subject" value="{{ subject }}">
+        </div>
+
+        <div class="form-group">
+          <label>Email Body</label>
+          <textarea name="generated_email" rows="18">{{ generated_email }}</textarea>
+        </div>
+
+      </div>
+
+      <div class="form-footer">
+        <span class="footer-hint">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Encrypted in transit
+        </span>
+        <button type="submit" class="btn btn-accent">
+          <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+          Send Email
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+
+</body>
+</html>
