@@ -146,8 +146,6 @@ pip install -r requirements.txt
 Create a `.env` file:
 
 ```env
-SECRET_KEY=your_django_secret_key
-
 OCEAN_API_KEY=your_ocean_api_key
 
 PROSPEO_API_KEY=your_prospeo_api_key
