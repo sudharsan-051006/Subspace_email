@@ -28,8 +28,12 @@ SECRET_KEY = 'django-insecure-s=vvv5gbm^)jzfbj@(bsbc816-$snz_scf810pmzur0gquy^*l
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = [
+    "subspace-email.onrender.com",
+    "localhost",
+    "127.0.0.1",
+    "*"
+]
 
 # Application definition
 
